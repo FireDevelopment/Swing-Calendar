@@ -21,4 +21,6 @@ More information is in the help page.
 
 `Events Folder:` Contains the file events.calendar, which stores all the events.
 
+`scr Folder:` The place where all the code is.
+
 Deleting the files in the folders or deleting the folders will break the calendar.
