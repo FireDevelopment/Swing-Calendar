@@ -24,3 +24,16 @@ More information is in the help page.
 `scr Folder:` The place where all the code is.
 
 Deleting the files in the folders or deleting the folders will break the calendar.
+
+
+##Updates:
+
+`Version v1.1.0:`
+- Delete All Button In Manage
+- Event Filters In Manage
+- Manage Arrow Gray Out After They Hit The Limit
+- New Pop-up For Must Name Event Warning
+- Detailed New Event Created Succesfully Screen With Event Name, Date, And Code
+- Version Number Displayed In Settings
+- Typo Fixes
+- Optimizations
