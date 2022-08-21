@@ -186,7 +186,7 @@ public class Calendar extends Thread {
 	public static Font infoFont;
 	
 	//calendar version
-	public static final String version = "1.1";
+	public static final String version = "v1.1.0";
 
 	public static void main(String[] args) {
 		//get theme
