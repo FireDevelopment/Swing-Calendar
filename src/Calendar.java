@@ -81,6 +81,7 @@ public class Calendar extends Thread {
 	private static JButton manageBackButton;
 	private static JButton manageSaveButton;
 	private static JButton manageCancelButton;
+	private static JButton manageDeleteAllButton;
 	
 	//label
 	private static JLabel logoLabel;
@@ -111,6 +112,15 @@ public class Calendar extends Thread {
 	private static JLabel ManageLabel;
 	private static JLabel daysNoticeLabel;
 	private static JLabel manageEventNameLabel;
+	private static JLabel settingsVersionLabel;
+	private static JLabel newEventEventName;
+	private static JLabel newEventDate;
+	private static JLabel newEventCode;
+	
+	//pass on stuff to new event created screen
+	private static String eventName;
+	private static String eventDate;
+	private static String eventCode;
 	
 	//text fields
 	private static JTextField dateEventTextField;
@@ -125,14 +135,18 @@ public class Calendar extends Thread {
 	private static JCheckBox repeatYearlyCheck;
 	private static JCheckBox manageCheckBox;
 	
+	//JComboBox
+	private static JComboBox<String> manageFilter;
+	
 	//JList
 	private static JList<String> manageList;
 	
 	//jlist list model
 	private static DefaultListModel<String> l1 = new DefaultListModel<>();  
 	
-	//manage selection variable
+	//manage list variables
 	private static String manageSelectionKey;
+	private static int manageLength;
 	
 	//event creating date
 	private static int monthChooserMonth = 1;
@@ -170,13 +184,16 @@ public class Calendar extends Thread {
 	public static Font timeFont;
 	public static Font greetingFont;
 	public static Font infoFont;
+	
+	//calendar version
+	public static final String version = "1.1";
 
 	public static void main(String[] args) {
 		//get theme
-		getColorTheme();
+		//getColorTheme();
 		
-		//get days notice setting
-		getDaysNotice();
+		//get settings
+		getSettings();
 		
 		//create the window
 		createWindow();
@@ -361,6 +378,9 @@ public class Calendar extends Thread {
 		//remove labels
 		root.remove(newEventLabel);
 		root.remove(eventCreatedConfirmationLabel);
+		root.remove(newEventEventName);
+		root.remove(newEventDate);
+		root.remove(newEventCode);
 	}
 	
 	public static void unbindWeeklyEventCreator() {
@@ -407,9 +427,10 @@ public class Calendar extends Thread {
 		//remove labels
 		root.remove(settingsPromptLabel);
 		root.remove(daysNoticeLabel);
+		root.remove(settingsVersionLabel);
 
 	}
-	
+	     
 	public static void unbindManagePage() {
 		//remove list
 		root.remove(manageList);
@@ -418,8 +439,12 @@ public class Calendar extends Thread {
 		root.remove(manageBackButton);
 		root.remove(manageEditButton);
 		root.remove(manageDeleteButton);
+		root.remove(manageDeleteAllButton);
 		root.remove(upArrowButton);
 		root.remove(downArrowButton);
+		
+		//remove combobox
+		root.remove(manageFilter);
 		
 		//remove image label
 		root.remove(ManageLabel);
@@ -599,36 +624,118 @@ public class Calendar extends Thread {
 	
 	private static void updateManageHomePage() {
 		
-		root.remove(manageList);
-		
 		//image label of page
 		ManageLabel.setIcon(ScaleUtils.scaleImage(ManageText, windowWidth/25*13*1.1, windowHeight/110*19*1.5));
 		ManageLabel.setBounds(placeX(0.5, windowWidth/10*6), placeY(0, 130), windowWidth/10*6, 130);
 		
 		
+		l1.clear(); //clear the list
 		
-		l1.clear();
-		for (int i = manageListArrow; i<events.size(); i++) {
-			String eventName = events.values().toArray()[i].toString();
-			String eventType = events.keySet().toArray()[i].toString().substring(0,2);
-			
-			if (eventType.equals("03")) {
-				int weekday = Integer.parseInt(events.keySet().toArray()[i].toString().substring(2,3));
-				l1.addElement(eventName + " - " + weekdays[weekday-1]);
-			} else {
-				String month = events.keySet().toArray()[i].toString().substring(2,4);
-				String day = events.keySet().toArray()[i].toString().substring(4,6);
-				l1.addElement(eventName + " - " + month+"/"+day);
+		DefaultListCellRenderer listRenderer = new DefaultListCellRenderer(); //get the cell renderer
+	    listRenderer.setHorizontalAlignment(DefaultListCellRenderer.CENTER); // center-aligned items
+	    manageFilter.setRenderer(listRenderer); //make items center aligned
+		manageFilter.setFont(infoFont);
+		manageFilter.setForeground(cBlue);
+		manageFilter.setBackground(themeColor);
+		manageFilter.setFocusable(false);
+		manageFilter.setBounds(placeX(0.9, windowWidth/6), placeY(0.05, windowHeight/6), windowWidth/6, windowHeight/6);
+		
+		manageLength = 0;
+		
+		for (int i = 0; i<events.size(); i++) { //add elements to the list with the correct scroll thing
+			String eventType = events.keySet().toArray()[i].toString().substring(0,2); //and weekly/date event   			
+			if (eventType.equals("03")) { //if weekly event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 2) {
+						manageLength++;
+				}
+			} else if(eventType.equals("02")) { //if yearly event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 4) {
+					manageLength++;
+				}
+			} else if(eventType.equals("01")) { //if single event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 3) {
+					manageLength++;
+				}
 			}
 			
 		}
-		manageList = new JList<>(l1);
+		
+		int eventPass = manageListArrow;
+		
+		
+		for (int i = 0; i<events.size(); i++) { //add elements to the list with the correct scroll thing
+			String eventName = events.values().toArray()[i].toString(); //get event name
+			String eventType = events.keySet().toArray()[i].toString().substring(0,2); //and weekly/date event
+			
+			if (eventType.equals("03")) { //if weekly event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 2) {
+						int weekday = Integer.parseInt(events.keySet().toArray()[i].toString().substring(2,3)); //get the day of the week the event is on
+						if (eventPass == 0) {
+							l1.addElement(eventName + " - " + weekdays[weekday-1]); //put the event name with its date in the list
+						} else {
+							eventPass--;
+						}
+				}
+			} else if(eventType.equals("02")) { //if yearly event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 4) {
+					String month = events.keySet().toArray()[i].toString().substring(2,4); //get the month of the event
+					String day = events.keySet().toArray()[i].toString().substring(4,6); //get the day of the event
+					if (eventPass == 0) {
+						l1.addElement(eventName + " - " + month+"/"+day); //add the event with its date
+					} else {
+						eventPass--;
+					}
+				}
+			} else if(eventType.equals("01")) { //if single event
+				if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 3) {
+					String month = events.keySet().toArray()[i].toString().substring(2,4); //get the month of the event
+					String day = events.keySet().toArray()[i].toString().substring(4,6); //get the day of the event
+					if (eventPass == 0) {
+						l1.addElement(eventName + " - " + month+"/"+day); //add the event with its date
+					} else {
+						eventPass--;
+					}
+				}
+			}
+			
+		}
 		
 		//list
 		manageList.setBounds(placeX(0.5, windowWidth/10*6), placeY(0.4, windowHeight/3), windowWidth/10*6, windowHeight/3);
 		manageList.setFont(timeFont);
 		manageList.setForeground(cBlue);
 		manageList.setBorder(BorderFactory.createLineBorder(cBlue));
+		
+		try { //arrow enabling and disabling
+			if (manageListArrow == 0) { //if up arrow should be disabled
+				if (!darkTheme) { //if in dark theme
+					upArrowLogo = ImageIO.read(new File("./assets/UpArrowGray.gif"));
+				} else { //if in light theme
+					upArrowLogo = ImageIO.read(new File("./assets/UpArrowDarkGray.gif"));
+				}
+			} else { //if not supposed to be disabled
+				if (!darkTheme) { //if in dark theme
+					upArrowLogo = ImageIO.read(new File("./assets/UpArrow.gif"));
+				} else { //if in light theme
+					upArrowLogo = ImageIO.read(new File("./assets/UpArrowDark.gif"));
+				}
+			}
+			if (manageListArrow == manageLength-1 || manageListArrow == manageLength) { //if down arrow should be disabled
+				if (!darkTheme) { //if in dark theme
+					downArrowLogo = ImageIO.read(new File("./assets/DownArrowGray.gif"));
+				} else { //if in light theme
+					downArrowLogo = ImageIO.read(new File("./assets/DownArrowDarkGray.gif"));
+				}
+			} else { //if not supposed to be disabled
+				if (!darkTheme) { //if in dark theme
+					downArrowLogo = ImageIO.read(new File("./assets/DownArrow.gif"));
+				} else { //if in light theme
+					downArrowLogo = ImageIO.read(new File("./assets/DownArrowDark.gif"));
+				}
+			}
+		} catch (IOException e1) {
+			System.err.println("Could not read file. Full error: "+e1);
+		}
 		
 		//arrows
 		
@@ -640,14 +747,17 @@ public class Calendar extends Thread {
 		
 		
 		//center text in list
-		DefaultListCellRenderer renderer = (DefaultListCellRenderer) manageList.getCellRenderer();
-		renderer.setHorizontalAlignment(SwingConstants.CENTER);
+		DefaultListCellRenderer renderer = (DefaultListCellRenderer) manageList.getCellRenderer(); //get the cell renderer for the list
+		renderer.setHorizontalAlignment(SwingConstants.CENTER); //align the text it renders
 		
 		//edit button
-		manageEditButton.setBounds(placeX(0.4, windowWidth/7), placeY(0.7, windowHeight/10), windowWidth/7, windowHeight/10);
+		manageEditButton.setBounds(placeX(0.3, windowWidth/7), placeY(0.7, windowHeight/10), windowWidth/7, windowHeight/10);
 		
-		//edit button
-		manageDeleteButton.setBounds(placeX(0.6, windowWidth/7), placeY(0.7, windowHeight/10), windowWidth/7, windowHeight/10);
+		//delete button
+		manageDeleteButton.setBounds(placeX(0.5, windowWidth/7), placeY(0.7, windowHeight/10), windowWidth/7, windowHeight/10);
+		
+		//delete all button
+		manageDeleteAllButton.setBounds(placeX(0.7, windowWidth/7), placeY(0.7, windowHeight/10), windowWidth/7, windowHeight/10);
 		
 		//back button
 		manageBackButton.setBounds(placeX(0.5, windowWidth/7), placeY(0.85, windowHeight/10), windowWidth/7, windowHeight/10);
@@ -655,6 +765,7 @@ public class Calendar extends Thread {
 		//change colors
 		manageEditButton.setBackground(themeColor);
 		manageDeleteButton.setBackground(themeColor);
+		manageDeleteAllButton.setBackground(themeColor);
 		manageBackButton.setBackground(themeColor);
 		manageList.setBackground(themeColor);
 		upArrowButton.setBackground(themeColor);
@@ -665,11 +776,18 @@ public class Calendar extends Thread {
 			manageEditButton.setForeground(cBlue);
 			manageBackButton.setForeground(cBlue);
 			manageDeleteButton.setForeground(cBlue);
+			manageDeleteAllButton.setForeground(cBlue);
 		} else { //if light theme
 			manageEditButton.setForeground(null);
 			manageBackButton.setForeground(null);
 			manageDeleteButton.setForeground(null);
+			manageDeleteAllButton.setForeground(null);
 		}
+		
+		//add combo box
+		root.add(manageFilter);
+		manageFilter.revalidate();
+		manageFilter.repaint(); //make the arrow show up
 		
 		//add labels
 		root.add(ManageLabel);
@@ -682,6 +800,7 @@ public class Calendar extends Thread {
 		root.add(downArrowButton);
 		root.add(manageEditButton);
 		root.add(manageDeleteButton);
+		root.add(manageDeleteAllButton);
 		root.add(manageBackButton);
 	}
 	
@@ -736,6 +855,11 @@ public class Calendar extends Thread {
 			settingsBackButton.setForeground(null);
 		}
 		
+		//version label
+		settingsVersionLabel.setBounds(placeX(0.9, windowWidth/10), placeY(0.9, windowHeight/6), windowWidth/4, windowHeight/6);
+		settingsVersionLabel.setFont(infoFont);
+		settingsVersionLabel.setForeground(cBlue);
+		
 		//set background of buttons
 		darkThemeButton.setBackground(themeColor);
 		lightThemeButton.setBackground(themeColor);
@@ -745,6 +869,7 @@ public class Calendar extends Thread {
 		root.add(settingsLabel);
 		root.add(settingsPromptLabel);
 		root.add(daysNoticeLabel);
+		root.add(settingsVersionLabel);
 		
 		//add buttons
 		root.add(darkThemeButton);
@@ -926,7 +1051,25 @@ public class Calendar extends Thread {
 		//confirmation label
 		eventCreatedConfirmationLabel.setFont(greetingFont);
 		eventCreatedConfirmationLabel.setForeground(cBlue);
-		eventCreatedConfirmationLabel.setBounds(placeX(0.5, windowWidth/1.5), placeY(0.4, windowHeight/5), (windowWidth/3)*2, windowHeight/5);
+		eventCreatedConfirmationLabel.setBounds(placeX(0.5, windowWidth/1.5), placeY(0.2, windowHeight/5), (windowWidth/3)*2, windowHeight/5);
+		
+		//event name
+		newEventEventName.setFont(timeFont);
+		newEventEventName.setText("Event Name: "+eventName);
+		newEventEventName.setForeground(cBlue);
+		newEventEventName.setBounds(placeX(0.5, windowWidth/1.5), placeY(0.4, windowHeight/5), (windowWidth/3)*2, windowHeight/5);
+		
+		//event date label
+		newEventDate.setFont(timeFont);
+		newEventDate.setText("Event Date: "+eventDate);
+		newEventDate.setForeground(cBlue);
+		newEventDate.setBounds(placeX(0.5, windowWidth/1.5), placeY(0.5, windowHeight/5), (windowWidth/3)*2, windowHeight/5);
+		
+		//event code label
+		newEventCode.setFont(infoFont);
+		newEventCode.setText("Event Code: " + eventCode);
+		newEventCode.setForeground(cBlue);
+		newEventCode.setBounds(placeX(0.5, windowWidth/1.5), placeY(0.7, windowHeight/5), (windowWidth/3)*2, windowHeight/5);
 		
 		//color buttons
 		newEventFinishBackButton.setBackground(themeColor);
@@ -941,6 +1084,9 @@ public class Calendar extends Thread {
 		//add labels to the screen
 		root.add(newEventLabel);
 		root.add(eventCreatedConfirmationLabel);
+		root.add(newEventEventName);
+		root.add(newEventDate);
+		root.add(newEventCode);
 		
 		//add the buttons to the screen
 		root.add(newEventFinishBackButton);
@@ -1171,7 +1317,7 @@ public class Calendar extends Thread {
 		
 		
 		eventsHeaderLabel.setForeground(cBlue);
-		eventsHeaderLabel.setBounds(placeX(-0.17, windowWidth/10*5), placeY(0.5, windowHeight/5), windowWidth/10*5, windowHeight/5);
+		eventsHeaderLabel.setBounds(placeX(-0.31, windowWidth/10*5), placeY(0.5, windowHeight/5), windowWidth/10*5, windowHeight/5);
 		eventsHeaderLabel.setFont(greetingFont);
 		
 		holidayHeaderLabel.setForeground(cBlue);
@@ -1479,18 +1625,22 @@ public class Calendar extends Thread {
 		}
 	}
 	
-	private static void getColorTheme() {
-		//default theme
+	private static void getSettings() {
+		//default settings
 		int theme = 1;
+		daysNotice = 4;
 		
 		//read file to get last theme
 		try {
 			BufferedReader fileSetting = new BufferedReader(new FileReader("./settings/theme.calendar"));
 			theme = Integer.parseInt(fileSetting.readLine());
 			fileSetting.close();
+			BufferedReader fileSetting2 = new BufferedReader(new FileReader("./settings/notice.calendar"));
+			daysNotice = Integer.parseInt(fileSetting2.readLine());
+			fileSetting2.close();
 		}
 		catch(Exception e) {
-			System.err.println("Could not theme settings file. Attempting to replace it now.\n\n" + e);
+			System.err.println("Could not read settings files. Full Error: \n\n" + e);
 		}
 		
 		//set the theme
@@ -1500,21 +1650,6 @@ public class Calendar extends Thread {
 		} else if (theme == 0) {
 			themeColor = Color.BLACK;
 			darkTheme = true;
-		}
-	}
-	
-	private static void getDaysNotice() {
-		//default setting
-		daysNotice = 7;
-		
-		//read file to get last days notice thing
-		try {
-			BufferedReader fileSetting = new BufferedReader(new FileReader("./settings/notice.calendar"));
-			daysNotice = Integer.parseInt(fileSetting.readLine());
-			fileSetting.close();
-		}
-		catch(Exception e) {
-			System.err.println("Could not theme settings file.\n\n" + e);
 		}
 	}
 	
@@ -1638,6 +1773,7 @@ public class Calendar extends Thread {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
+				manageFilter.setSelectedIndex(0);
 				manageListArrow = 0;
 				changeScreen((byte) 11);
 			}
@@ -1699,7 +1835,7 @@ public class Calendar extends Thread {
 		timeLabel = new JLabel("", SwingConstants.CENTER); //text will also be set later
 		
 		//events header label
-		eventsHeaderLabel = new JLabel("Today's Events:", SwingConstants.CENTER); //text will not change
+		eventsHeaderLabel = new JLabel("Events:", SwingConstants.CENTER); //text will not change
 		
 		//events label
 		eventsLabel = new JTextArea(""); //will be recoded in far future
@@ -1855,7 +1991,7 @@ public class Calendar extends Thread {
 			public void actionPerformed(ActionEvent e) {
 				
 				if (dateEventTextField.getText().equals("") || dateEventTextField.getText().equals("Must Enter Name")) {
-					dateEventTextField.setText("Must Enter Name");
+					JOptionPane.showMessageDialog(root, "You must name your event.");
 				} else {
 				
 				//add event to event list
@@ -1898,6 +2034,9 @@ public class Calendar extends Thread {
 				events.put(eventType+eventMonth+eventDay+eventYear+nano, dateEventTextField.getText());
 				
 				System.out.println(events);
+				eventName = dateEventTextField.getText();
+				eventCode = eventType+eventMonth+eventDay+eventYear+nano;
+				eventDate = months[monthChooserMonth]+" "+dayChooserMonth;
 				
 				saveEvents(); //save the events
 				
@@ -1972,10 +2111,14 @@ public class Calendar extends Thread {
 			public void actionPerformed(ActionEvent e) {
 				
 				if (weeklyEventTextField.getText().equals("") || weeklyEventTextField.getText().equals("Must Enter Name")) {
-					weeklyEventTextField.setText("Must Enter Name");
+					JOptionPane.showMessageDialog(root, "You must name your event.");
 				} else {
 				
 					int nano = LocalDateTime.now().getNano();
+					
+					eventName = weeklyEventTextField.getText();
+					eventDate = weekdays[weekDayChooserDay];
+					eventCode = "03"+weekDayChooserDay+nano;
 					
 					//add event to event list
 					events.put("03"+weekDayChooserDay+nano, weeklyEventTextField.getText());
@@ -2003,7 +2146,16 @@ public class Calendar extends Thread {
 			}
 		});
 		
-		eventCreatedConfirmationLabel = new JLabel("Your Event Has Been Created", SwingConstants.CENTER);
+		eventCreatedConfirmationLabel = new JLabel("Your Event Has Been Created!", SwingConstants.CENTER);
+		
+		//event name
+		newEventEventName = new JLabel("Event Name: ", SwingConstants.CENTER);
+		
+		//event date
+		newEventDate = new JLabel("Date: ", SwingConstants.CENTER);
+		
+		//event date
+		newEventCode = new JLabel("Code: ", SwingConstants.CENTER);
 		
 		//
 		// Help Screen
@@ -2099,6 +2251,9 @@ public class Calendar extends Thread {
 		settingsBackButton = new JButton("Back");
 		settingsBackButton.setBackground(themeColor);
 		
+		//version label
+		settingsVersionLabel = new JLabel("Version "+version);
+		
 		//add event
 		settingsBackButton.addActionListener(new ActionListener() {
 			@Override
@@ -2111,7 +2266,38 @@ public class Calendar extends Thread {
 		// MANAGE HOME PAGE
 		//
 		
-		manageList = new JList<String>();
+		String eventTypes[]={"All Events","Date Events","Weekly Events", "Single Events", "Yearly Events"};
+		manageFilter = new JComboBox<String>(eventTypes);
+		
+		manageFilter.addActionListener(new ActionListener() {  
+	        public void actionPerformed(ActionEvent e) {
+	        	manageListArrow = 0;
+	        	
+	        	renderScreen();
+	        }
+		});
+		
+		manageList = new JList<String>(l1);
+		
+		manageDeleteAllButton = new JButton("Delete All Events");
+		manageDeleteAllButton.setBackground(themeColor);
+		
+		//set action
+		manageDeleteAllButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {	
+					int prompt = JOptionPane.showConfirmDialog(root, "Are you sure you want to delete all events? This cannot be undone.");
+					
+					if(prompt==JOptionPane.YES_OPTION){   					
+						
+						events.clear();
+						
+						saveEvents(); //write event to file
+						
+						renderScreen(); //update screen
+					}
+			}
+		});
 		
 		//delete button
 		manageDeleteButton = new JButton("Delete Event");
@@ -2122,16 +2308,50 @@ public class Calendar extends Thread {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (manageList.getSelectedValue() != null) { //if an event is selected
-					int selectIndex = manageList.getSelectedIndex()+manageListArrow; //get the selected event
+					int selection = manageList.getSelectedIndex()+manageListArrow;
+					
+					for (int p = 0; p<events.size(); p++) {
+						String eventData = (String) events.keySet().toArray()[p];
+						String eventType = eventData.substring(0, 2);
+						
+						if (eventType.equals("03")) { //if weekly event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 2) {
+								if (selection == 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						} else if(eventType.equals("02")) { //if yearly event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 4) {
+								if (selection == 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						} else if(eventType.equals("01")) { //if single event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 3) {
+								if (selection <= 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						}
+					}
 					
 					int prompt = JOptionPane.showConfirmDialog(root, "Are you sure you want to delete this event?");
 					
 					if(prompt==JOptionPane.YES_OPTION){   
-						if (selectIndex == events.size()-1 && manageListArrow == events.size()-1) { //if the last event is deleted
+						if (selection == 0 && manageListArrow == manageLength-1) { //if the last event is deleted
 							manageListArrow--; //move the list up
 						}
 						
-						events.remove(events.keySet().toArray()[selectIndex]); //delete the event
+						events.remove(manageSelectionKey); //delete the event
 						
 						saveEvents(); //write event to file
 						
@@ -2154,9 +2374,44 @@ public class Calendar extends Thread {
 			public void actionPerformed(ActionEvent e) {
 				if (manageList.getSelectedValue() != null) {
 					
-					manageSelectionKey = (String)events.keySet().toArray()[manageList.getSelectedIndex()+manageListArrow];
+					int selection = manageList.getSelectedIndex()+manageListArrow;
+					
+					for (int p = 0; p<events.size(); p++) {
+						String eventData = (String) events.keySet().toArray()[p];
+						String eventType = eventData.substring(0, 2);
+						
+						if (eventType.equals("03")) { //if weekly event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 2) {
+								if (selection == 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						} else if(eventType.equals("02")) { //if yearly event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 4) {
+								if (selection == 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						} else if(eventType.equals("01")) { //if single event
+							if (manageFilter.getSelectedIndex() == 0 || manageFilter.getSelectedIndex() == 1 || manageFilter.getSelectedIndex() == 3) {
+								if (selection <= 0) {
+									manageSelectionKey = (String)events.keySet().toArray()[p];
+									break;
+								} else {
+									selection--;
+								}
+							}
+						}
+					}
 					
 					changeScreen((byte)12);
+					
 				} else {
 					JOptionPane.showMessageDialog(root,"You must select an event to edit.");  
 				}
@@ -2171,6 +2426,19 @@ public class Calendar extends Thread {
 		manageBackButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				try { //undisable all the arrow buttons
+					if (!darkTheme) { //if light theme
+						downArrowLogo = ImageIO.read(new File("./assets/DownArrow.gif")); //set images
+						upArrowLogo = ImageIO.read(new File("./assets/UpArrow.gif"));
+					} else { //if dark theme
+						downArrowLogo = ImageIO.read(new File("./assets/DownArrowDark.gif")); //set images
+						upArrowLogo = ImageIO.read(new File("./assets/UpArrowDark.gif"));
+					}
+				} catch(Exception e2) {
+					System.err.println("Could not read image files. Full Error: "+e2);
+				}
+				
 				changeScreen((byte) 1);
 			}
 		});
@@ -2379,7 +2647,7 @@ public class Calendar extends Thread {
 				if ((byte) screen == 11) {
 					manageListArrow++;
 					
-					if (manageListArrow>events.size()-1) {
+					if (manageListArrow>manageLength-1) {
 						manageListArrow--;
 					}
 										
@@ -2499,6 +2767,8 @@ public class Calendar extends Thread {
 		manageMenuBarButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				manageFilter.setSelectedIndex(0);
 				changeScreen((byte) 11);
 			}
 		});
@@ -2557,7 +2827,7 @@ public class Calendar extends Thread {
 		
 		//exit java when the window closes
 		root.addWindowListener(new WindowAdapter() {
-			@Override
+			@Override	
 			public void windowClosing(WindowEvent e) {
 				System.exit(0);
 			}
