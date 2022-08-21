@@ -26,7 +26,7 @@ More information is in the help page.
 Deleting the files in the folders or deleting the folders will break the calendar.
 
 
-##Updates:
+## Updates:
 
 `Version v1.1.0:`
 - Delete All Button In Manage
