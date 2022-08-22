@@ -186,7 +186,7 @@ public class Calendar extends Thread {
 	public static Font infoFont;
 	
 	//calendar version
-	public static final String version = "v1.1.0";
+	public static final String version = "v1.1.2";
 
 	public static void main(String[] args) {
 		//get theme
@@ -2117,7 +2117,7 @@ public class Calendar extends Thread {
 					int nano = LocalDateTime.now().getNano();
 					
 					eventName = weeklyEventTextField.getText();
-					eventDate = weekdays[weekDayChooserDay];
+					eventDate = weekdays[weekDayChooserDay-1];
 					eventCode = "03"+weekDayChooserDay+nano;
 					
 					//add event to event list
