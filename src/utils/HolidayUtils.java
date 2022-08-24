@@ -25,31 +25,29 @@ public class HolidayUtils {
 			daysInMonth[2] = 29;
 		}
 		
-		
-		holidays.put("New Year's Day", "0101");
-		holidays.put("Martin Luther King Day", "000113");
-		holidays.put("Groundhog Day", "0202");
-		holidays.put("Valentines Day", "0214");
-		holidays.put("Presidents Day", "000213");
-		holidays.put("Leap Day", "0229");
-		holidays.put("Saint Patrick's Day", "0317");
-		holidays.put("Cinco de Mayo", "0505");
-		holidays.put("Mother's Day", "000572");
-		holidays.put("Memorial Day", "0000051");
-		holidays.put("Juneteenth", "0619");
-		holidays.put("Father's Day", "000673");
-		holidays.put("Independance Day", "0704");
-		holidays.put("Ice Cream Day", "000772");
-		holidays.put("International Cat Day", "0808");
-		holidays.put("Labor Day", "000911");
-		holidays.put("Columbus Day", "001012");
-		holidays.put("Halloween", "1031");
-		holidays.put("Veterans Day", "1111");
-		holidays.put("Thanksgiving Day", "001144");
-		holidays.put("Cybermonday", "001115");
-		holidays.put("Christmas Eve", "1224");
-		holidays.put("Christmas Day", "1225");
-		holidays.put("New Years Eve", "1231");
+		try {
+			BufferedReader holidayFile = new BufferedReader(new FileReader("./events/holidays.calendar")); //to get holidays
+			BufferedReader holidayCounter = new BufferedReader(new FileReader("./events/holidays.calendar")); //to get number of lines
+			
+			int holidayCount = 0; //count lines in file
+			while((holidayCounter.readLine()) != null) {holidayCount++;} //read all lines to see how many holidays there are
+			holidayCounter.close();
+			
+			holidayCount = (holidayCount/2); //events are two lines long
+			
+			for (int l=0; l<holidayCount; l++) { //read through every holiday
+				
+				String holidayName = holidayFile.readLine(); //get the holiday name
+				String holidayID = holidayFile.readLine(); //get the holiday id
+				
+				holidays.put(holidayName, holidayID); //put it in the holiday list thing
+			}
+			
+			holidayFile.close();
+			
+		} catch(Exception e) {
+			System.err.println("Holidays file could not be found. Full Error:\n\n"+e);
+		}
 		
 		//formating - type 1:
 		// 1231 = 12 month of year and 31st day of the month
