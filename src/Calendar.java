@@ -762,6 +762,12 @@ public class Calendar extends Thread {
 		//back button
 		manageBackButton.setBounds(placeX(0.5, windowWidth/7), placeY(0.85, windowHeight/10), windowWidth/7, windowHeight/10);
 		
+		//change font sizes
+		manageEditButton.setFont(buttonFont);
+		manageDeleteButton.setFont(buttonFont);
+		manageDeleteAllButton.setFont(buttonFont);
+		manageBackButton.setFont(buttonFont);
+
 		//change colors
 		manageEditButton.setBackground(themeColor);
 		manageDeleteButton.setBackground(themeColor);
