@@ -2036,7 +2036,7 @@ public class Calendar extends Thread {
 				System.out.println(events);
 				eventName = dateEventTextField.getText();
 				eventCode = eventType+eventMonth+eventDay+eventYear+nano;
-				eventDate = months[monthChooserMonth]+" "+dayChooserMonth;
+				eventDate = months[monthChooserMonth-1]+" "+dayChooserMonth;
 				
 				saveEvents(); //save the events
 				
